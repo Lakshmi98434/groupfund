@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Group Fund – Admin</title>
+<style>
+:root{--ink:#12302f;--ink2:#4b605f;--bg:#f2f5f4;--card:#fff;--line:#d5dfdd;--accent:#0f6b63;--warn:#b3261e;--gold:#e0a21b}
+*{box-sizing:border-box}
+body{margin:0;font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+h1,h2,h3{margin:0 0 .5rem;line-height:1.2}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:#fff;padding:.6rem 1rem}
+button.ghost{background:transparent;color:var(--accent)}
+button.danger{background:transparent;color:var(--warn);border-color:var(--warn)}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+button:disabled{opacity:.6;cursor:wait}
+input{font:inherit;width:100%;padding:.6rem .7rem;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+label{display:block;font-weight:600;margin:.9rem 0 .25rem}
+.hint{color:var(--ink2);font-size:.88rem;margin:.25rem 0 0}
+.msg{margin-top:.8rem;font-weight:600}.msg.err{color:var(--warn)}.msg.ok{color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.25rem}
+.hidden{display:none!important}
+#login{min-height:100vh;display:grid;place-items:center;padding:1rem}
+#login .card{width:100%;max-width:380px;border-top:6px solid var(--gold)}
+header{background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:.7rem 1rem;gap:1rem;flex-wrap:wrap}
+header b{font-size:1.1rem}
+header span{opacity:.8;font-size:.9rem;margin-right:.7rem}
+header button{background:transparent;border-color:#fff;padding:.4rem .8rem}
+nav{display:flex;gap:.25rem;overflow-x:auto;background:#fff;border-bottom:1px solid var(--line);padding:0 .5rem}
+nav button{background:none;border:0;border-bottom:3px solid transparent;border-radius:0;color:var(--ink2);padding:.8rem 1rem;white-space:nowrap}
+nav button.on{color:var(--ink);border-bottom-color:var(--gold);font-weight:700}
+main{max-width:760px;margin:1.2rem auto;padding:0 1rem}
+.soon{color:var(--ink2)}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.1rem}
+table{width:100%;border-collapse:collapse;font-size:.92rem}th,td{text-align:left;padding:.5rem .4rem;border-bottom:1px solid var(--line)}th{color:var(--ink2);font-weight:600}.tbl{overflow-x:auto}select{font:inherit;width:100%;padding:.6rem .7rem;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}.pinbox{margin-top:1rem;padding:1rem;border:2px dashed var(--gold);border-radius:10px;background:#fff9e8}.pinbox b{font-size:1.5rem;letter-spacing:.15em}
+.badge{display:inline-block;padding:.1rem .5rem;border-radius:99px;border:1px solid var(--line);font-size:.8rem}.sub{margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--line)}.kv{display:grid;grid-template-columns:auto 1fr;gap:.2rem 1rem;font-size:.95rem}.kv dt{color:var(--ink2)}.kv dd{margin:0}
+.qr{margin-top:.8rem;max-width:220px;border:1px solid var(--line);border-radius:8px;padding:6px;background:#fff}
+.qr img{width:100%;display:block}
+</style>
+</head>
+<body>
+
+<section id="login">
+  <div class="card">
+    <h1>Group Fund</h1>
+    <p class="hint">Admin sign-in</p>
+    <label for="mid">Admin ID</label>
+    <input id="mid" autocomplete="username" autocapitalize="characters">
+    <label for="pin">PIN / passphrase</label>
+    <input id="pin" type="password" autocomplete="current-password">
+    <div class="row"><button id="loginBtn">Sign in</button></div>
+    <div id="loginMsg" class="msg err" role="alert"></div>
+  </div>
+</section>
+
+<section id="app" class="hidden">
+  <header>
+    <b>Group Fund · Admin</b>
+    <div><span id="who"></span><button id="logoutBtn">Sign out</button></div>
+  </header>
+  <nav id="nav">
+    <button data-tab="dash" class="on">Dashboard</button>
+    <button data-tab="members">Members</button>
+    <button data-tab="schemes">Schemes</button>
+    <button data-tab="contrib">Contributions</button>
+    <button data-tab="txn">Transactions</button>
+    <button data-tab="requests">Requests</button>
+    <button data-tab="money">Loans &amp; payouts</button>
+    <button data-tab="pay">Payment details</button>
+  </nav>
+  <main>
+    <div id="tab-dash" class="card">
+      <h2>Dashboard</h2>
+      <p class="soon">Members, schemes, contributions and requests are added in the next steps. For now, set up the payment details members will see.</p>
+    </div>
+
+    <div id="tab-members" class="card hidden">
+      <div class="row" style="margin-top:0;justify-content:space-between;align-items:center">
+        <h2 style="margin:0">Members</h2>
+        <button id="addMemberBtn">Add member</button>
+      </div>
+      <div id="mForm" class="hidden">
+        <h3 id="mFormTitle" style="margin-top:1rem">Add member</h3>
+        <label for="m_name">Name</label><input id="m_name" autocomplete="off">
+        <label for="m_mobile">Mobile (10 digits)</label><input id="m_mobile" inputmode="numeric" maxlength="10" autocomplete="off">
+        <label for="m_email">Email (optional)</label><input id="m_email" type="email" autocomplete="off">
+        <label for="m_address">Address (optional)</label><input id="m_address" autocomplete="off">
+        <label for="m_photo">Photo link (optional, https)</label><input id="m_photo" autocomplete="off">
+        <label for="m_role">Role</label>
+        <select id="m_role"><option value="member">Member</option><option value="treasurer">Treasurer</option><option value="approver">Approver</option><option value="superadmin">Super admin</option></select>
+        <div id="m_statusWrap" class="hidden"><label for="m_status">Status</label>
+          <select id="m_status"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
+        <div class="row">
+          <button id="mSave">Save member</button>
+          <button id="mReset" class="danger hidden">Reset PIN</button>
+          <button id="mCancel" class="ghost">Cancel</button>
+        </div>
+      </div>
+      <div id="pinBox" class="pinbox hidden" role="status">
+        <div id="pinWho"></div>
+        <div>Temporary PIN: <b id="pinVal"></b></div>
+        <p class="hint">Shown only once. Share it privately with the member. It is not stored anywhere readable.</p>
+        <button id="pinDone" class="ghost">I have noted it</button>
+      </div>
+      <div id="mMsg" class="msg" role="status"></div>
+      <div class="tbl"><table>
+        <thead><tr><th>ID</th><th>Name</th><th>Mobile</th><th>Role</th><th>Status</th><th></th></tr></thead>
+        <tbody id="mBody"></tbody>
+      </table></div>
+    </div>
+
+    <div id="tab-schemes" class="card hidden">
+      <div class="row" style="margin-top:0;justify-content:space-between;align-items:center">
+        <h2 style="margin:0">Schemes</h2>
+        <button id="addSchemeBtn">Create scheme</button>
+      </div>
+      <div id="sMsg" class="msg" role="status"></div>
+
+      <div id="sForm" class="hidden">
+        <h3 id="sFormTitle" style="margin-top:1rem">Create scheme</h3>
+        <label for="s_type">Scheme type</label>
+        <select id="s_type">
+          <option value="savings_distribution">Savings + Distribution</option>
+          <option value="loan_fund">Loan Fund</option>
+          <option value="savings_loan">Savings + Loan</option>
+          <option value="custom">Custom</option>
+        </select>
+        <p class="hint" id="s_typeHint"></p>
+        <label for="s_name">Scheme name</label><input id="s_name" autocomplete="off">
+        <label for="s_desc">Description (optional)</label><input id="s_desc" autocomplete="off">
+        <label for="s_start">Start date</label><input id="s_start" type="date">
+        <label for="s_end">End date (optional)</label><input id="s_end" type="date">
+        <div id="g_contrib">
+          <label for="s_amount">Contribution amount (₹)</label><input id="s_amount" inputmode="decimal">
+          <label for="s_freq">Contribution frequency</label>
+          <select id="s_freq"><option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="one_time">One time</option></select>
+        </div>
+        <div id="g_loan">
+          <label for="s_interest">Loan interest (% per month, 0 for none)</label><input id="s_interest" inputmode="decimal" value="0">
+          <label for="s_maxloan">Maximum loan per member (₹, 0 for no limit)</label><input id="s_maxloan" inputmode="decimal" value="0">
+        </div>
+        <p id="s_lockHint" class="hint hidden">This scheme has started, so only a super admin can change its type, start date, amount, frequency or loan rules.</p>
+        <div class="row"><button id="sSave">Save scheme</button><button id="sCancel" class="ghost">Cancel</button></div>
+      </div>
+
+      <div id="sDetail" class="sub hidden">
+        <div class="row" style="margin-top:0;justify-content:space-between;align-items:center">
+          <h3 id="sdTitle" style="margin:0"></h3>
+          <button id="sdClose" class="ghost">Close</button>
+        </div>
+        <dl class="kv" id="sdMeta"></dl>
+        <div class="row">
+          <button id="sdEdit" class="ghost">Edit scheme</button>
+          <button id="sdPause" class="ghost">Pause</button>
+          <button id="sdResume" class="ghost">Resume</button>
+          <button id="sdSettleBtn">Final settlement</button>
+          <button id="sdComplete" class="danger">Mark completed</button>
+        </div>
+        <div id="sdSettle" class="sub hidden"></div>
+        <h3 style="margin-top:1.2rem">Members in this scheme</h3>
+        <div class="row" style="margin-top:.3rem">
+          <select id="sdAddSel" style="max-width:280px"></select>
+          <button id="sdAddBtn">Add to scheme</button>
+        </div>
+        <div class="tbl"><table>
+          <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="sdMembers"></tbody>
+        </table></div>
+      </div>
+
+      <div class="tbl" style="margin-top:1rem"><table>
+        <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Amount</th><th>Members</th><th>Status</th><th></th></tr></thead>
+        <tbody id="sBody"></tbody>
+      </table></div>
+    </div>
+
+    <div id="tab-contrib" class="card hidden">
+      <h2>Contributions</h2>
+      <label for="c_scheme">Scheme</label><select id="c_scheme"></select>
+      <div id="c_periodWrap"><label for="c_period" id="c_periodLbl">Period</label><input id="c_period"></div>
+      <label for="c_date">Date the money was received</label><input id="c_date" type="date">
+      <div class="row"><button id="c_load">Show records</button><button id="c_gen" class="ghost">Create records for this period</button></div>
+      <div id="cMsg" class="msg" role="status"></div>
+      <p id="c_bal" class="hint"></p>
+      <div class="tbl"><table>
+        <thead><tr><th>Member</th><th>Required</th><th>Paid</th><th>Pending</th><th>Status</th><th></th></tr></thead>
+        <tbody id="cBody"></tbody>
+      </table></div>
+    </div>
+
+    <div id="tab-txn" class="card hidden">
+      <h2>Transactions</h2>
+      <p class="hint">Balances below are calculated from the transaction list. Nothing is typed in or deleted; mistakes are fixed with a correction row.</p>
+      <dl class="kv" id="balBox"></dl>
+      <div class="row">
+        <select id="t_scheme" style="max-width:220px"></select>
+        <select id="t_type" style="max-width:180px">
+          <option value="">All types</option><option>CONTRIBUTION</option><option>DISTRIBUTION</option>
+          <option>LOAN</option><option>REPAYMENT</option><option>INTEREST</option><option>CORRECTION</option>
+        </select>
+        <button id="t_load">Show</button>
+      </div>
+      <div id="tMsg" class="msg" role="status"></div>
+      <div class="tbl"><table>
+        <thead><tr><th>ID</th><th>Date</th><th>Scheme</th><th>Member</th><th>Type</th><th>Amount</th><th>Note</th><th></th></tr></thead>
+        <tbody id="tBody"></tbody>
+      </table></div>
+    </div>
+
+    <div id="tab-requests" class="card hidden">
+      <h2>Requests</h2>
+      <h3>Pending vs actual balance</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>Scheme</th><th>Actual balance</th><th>Pending requests</th><th>Available after pending</th></tr></thead>
+        <tbody id="posBody"></tbody>
+      </table></div>
+      <div class="row">
+        <select id="r_status" style="max-width:180px">
+          <option value="pending">Pending</option><option value="approved">Approved</option>
+          <option value="rejected">Rejected</option><option value="cancelled">Cancelled</option><option value="all">All</option>
+        </select>
+        <button id="r_load">Show</button>
+      </div>
+      <div id="rMsg" class="msg" role="status"></div>
+      <div class="tbl"><table>
+        <thead><tr><th>ID</th><th>Member</th><th>Scheme</th><th>Amount</th><th>Reason</th><th>Repay</th><th>Status</th><th></th></tr></thead>
+        <tbody id="rBody"></tbody>
+      </table></div>
+    </div>
+
+    <div id="tab-money" class="card hidden">
+      <h2>Loans &amp; payouts</h2>
+      <label for="mo_type">What happened?</label>
+      <select id="mo_type">
+        <option value="REPAYMENT">Loan repayment received (principal)</option>
+        <option value="INTEREST">Loan interest received</option>
+        <option value="DISTRIBUTION">Amount given to a member (distribution)</option>
+        <option value="LOAN">Loan given to a member</option>
+      </select>
+      <label for="mo_scheme">Scheme</label><select id="mo_scheme"></select>
+      <label for="mo_member">Member</label><select id="mo_member"></select>
+      <p class="hint" id="mo_hint"></p>
+      <label for="mo_amount">Amount (₹)</label><input id="mo_amount" inputmode="decimal">
+      <label for="mo_date">Date</label><input id="mo_date" type="date">
+      <label for="mo_note">Note (optional)</label><input id="mo_note" maxlength="200" autocomplete="off">
+      <div class="row"><button id="mo_save">Record</button></div>
+      <div id="moMsg" class="msg" role="status"></div>
+      <div class="sub">
+        <h3>Outstanding loans</h3>
+        <div class="tbl"><table>
+          <thead><tr><th>Member</th><th>Scheme</th><th>Taken</th><th>Repaid</th><th>Outstanding</th><th>Interest paid</th><th></th></tr></thead>
+          <tbody id="loanBody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <div id="tab-pay" class="card hidden">
+      <h2>Payment details for members</h2>
+      <p class="hint">Members see these only when at least one field is filled. Leave a field empty to hide it.</p>
+      <label for="upi_id">UPI ID</label>
+      <input id="upi_id" placeholder="name@bank" autocomplete="off">
+      <label for="upi_number">UPI number (10 digits)</label>
+      <input id="upi_number" inputmode="numeric" maxlength="10" autocomplete="off">
+      <label for="qr_url">QR image link (https)</label>
+      <input id="qr_url" placeholder="https://..." autocomplete="off">
+      <p class="hint">Upload the QR to Google Drive, set sharing to “Anyone with the link”, then use <code>https://drive.google.com/uc?export=view&amp;id=FILE_ID</code>.</p>
+      <div id="qrBox" class="qr hidden"><img id="qrImg" alt="Payment QR preview"></div>
+      <div class="row">
+        <button id="saveBtn">Save details</button>
+        <button id="removeBtn" class="danger">Remove all</button>
+      </div>
+      <div id="payMsg" class="msg" role="status"></div>
+    </div>
+  </main>
+</section>
+
+<script>
+// ====== PASTE YOUR WEB APP URL (ends with /exec) ======
+const API_URL = 'https://script.google.com/macros/s/AKfycbzmaF-qA0v_vmmXRN2iF4Uqgeb8TzaO0tI3HQ9N8YR713aBxcJiPeK297eqXbn3kNKv0w/exec';
+// =======================================================
+
+const $ = id => document.getElementById(id);
+let token = null;
+try { token = sessionStorage.getItem('gf_admin_token'); } catch (e) {}
+
+async function api(payload) {
+  if (token) payload.token = token;
+  try {
+    // text/plain avoids a CORS preflight, which Apps Script cannot answer
+    const r = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    const d = await r.json();
+    if (d.error === 'SESSION_EXPIRED') { signOut('Session expired. Please sign in again.'); }
+    return d;
+  } catch (e) {
+    return { ok: false, error: 'Network error. Check your connection and the API URL.' };
+  }
+}
+
+function saveToken(t) { token = t; try { t ? sessionStorage.setItem('gf_admin_token', t) : sessionStorage.removeItem('gf_admin_token'); } catch (e) {} }
+
+function showApp(name, id) {
+  $('login').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  $('who').textContent = name + ' (' + id + ')';
+  loadPayment();
+}
+
+function signOut(message) {
+  saveToken(null);
+  $('app').classList.add('hidden');
+  $('login').classList.remove('hidden');
+  $('pin').value = '';
+  $('loginMsg').textContent = message || '';
+}
+
+$('loginBtn').onclick = async () => {
+  const btn = $('loginBtn'); btn.disabled = true; $('loginMsg').textContent = '';
+  const d = await api({ action: 'login', portal: 'admin', member_id: $('mid').value, pin: $('pin').value });
+  btn.disabled = false;
+  if (!d.ok) { $('loginMsg').textContent = d.error || 'Sign-in failed'; return; }
+  saveToken(d.token);
+  $('pin').value = '';
+  try { sessionStorage.setItem('gf_admin_name', d.name + '|' + d.member_id); } catch (e) {}
+  showApp(d.name, d.member_id);
+};
+$('pin').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginBtn').click(); });
+
+$('logoutBtn').onclick = async () => { await api({ action: 'logout' }); signOut('Signed out.'); };
+
+$('nav').onclick = e => {
+  const t = e.target.dataset.tab; if (!t) return;
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b === e.target));
+  ['dash', 'members', 'schemes', 'contrib', 'txn', 'requests', 'money', 'pay'].forEach(x => $('tab-' + x).classList.toggle('hidden', t !== x));
+  if (t === 'members') loadMembers();
+  if (t === 'schemes') loadSchemes();
+  if (t === 'contrib') openContrib();
+  if (t === 'txn') openTxn();
+  if (t === 'requests') loadRequests();
+  if (t === 'money') openMoney();
+};
+
+function say(text, ok) { const m = $('payMsg'); m.textContent = text; m.className = 'msg ' + (ok ? 'ok' : 'err'); }
+
+function previewQr() {
+  const u = $('qr_url').value.trim();
+  const ok = /^https:\/\//.test(u);
+  $('qrBox').classList.toggle('hidden', !ok);
+  if (ok) $('qrImg').src = u;
+}
+$('qr_url').addEventListener('change', previewQr);
+
+async function loadPayment() {
+  const d = await api({ action: 'getPaymentInfo' });
+  if (!d.ok) return;
+  $('upi_id').value = d.payment.upi_id;
+  $('upi_number').value = d.payment.upi_number;
+  $('qr_url').value = d.payment.qr_url;
+  previewQr();
+}
+
+async function savePayment(vals, okText) {
+  $('saveBtn').disabled = $('removeBtn').disabled = true;
+  const d = await api(Object.assign({ action: 'setPaymentInfo' }, vals));
+  $('saveBtn').disabled = $('removeBtn').disabled = false;
+  if (d.ok) { say(okText, true); loadPayment(); } else say(d.error || 'Could not save', false);
+}
+
+$('saveBtn').onclick = () => savePayment({
+  upi_id: $('upi_id').value, upi_number: $('upi_number').value, qr_url: $('qr_url').value
+}, 'Saved. Members will see the updated details.');
+
+$('removeBtn').onclick = () => {
+  if (confirm('Remove all payment details? Members will no longer see the Pay Admin card.'))
+    savePayment({ upi_id: '', upi_number: '', qr_url: '' }, 'Removed. Members no longer see payment details.');
+};
+
+// ===== MEMBERS =====
+let members = [], editingId = null;
+function mSay(t, ok) { const m = $('mMsg'); m.textContent = t; m.className = 'msg ' + (ok ? 'ok' : 'err'); }
+
+async function loadMembers() {
+  const d = await api({ action: 'listMembers' });
+  if (!d.ok) { mSay(d.error || 'Could not load members', false); return; }
+  members = d.members;
+  const tb = $('mBody'); tb.textContent = '';
+  members.forEach(m => {
+    const tr = document.createElement('tr');
+    [m.member_id, m.name, m.mobile, m.role, m.status].forEach(v => {
+      const td = document.createElement('td'); td.textContent = v; tr.appendChild(td);
+    });
+    const td = document.createElement('td');
+    const b = document.createElement('button'); b.className = 'ghost'; b.textContent = 'Edit';
+    b.onclick = () => openForm(m); td.appendChild(b); tr.appendChild(td);
+    tb.appendChild(tr);
+  });
+}
+
+function openForm(m) {
+  editingId = m ? m.member_id : null;
+  $('mForm').classList.remove('hidden');
+  $('mFormTitle').textContent = m ? 'Edit ' + m.name + ' (' + m.member_id + ')' : 'Add member';
+  $('m_name').value = m ? m.name : '';
+  $('m_mobile').value = m ? m.mobile : '';
+  $('m_email').value = m ? m.email : '';
+  $('m_address').value = m ? m.address : '';
+  $('m_photo').value = m ? m.photo_url : '';
+  $('m_role').value = m ? m.role : 'member';
+  $('m_status').value = m ? m.status : 'active';
+  $('m_statusWrap').classList.toggle('hidden', !m);
+  $('mReset').classList.toggle('hidden', !m);
+  $('m_name').focus();
+}
+function closeForm() { $('mForm').classList.add('hidden'); editingId = null; }
+
+function showPin(who, pin) {
+  $('pinWho').textContent = who; $('pinVal').textContent = pin; $('pinBox').classList.remove('hidden');
+}
+$('pinDone').onclick = () => { $('pinBox').classList.add('hidden'); $('pinVal').textContent = ''; };
+$('addMemberBtn').onclick = () => openForm(null);
+$('mCancel').onclick = closeForm;
+
+$('mSave').onclick = async () => {
+  const vals = { name: $('m_name').value, mobile: $('m_mobile').value, email: $('m_email').value,
+    address: $('m_address').value, photo_url: $('m_photo').value, role: $('m_role').value };
+  $('mSave').disabled = true;
+  let d;
+  if (editingId) d = await api(Object.assign({ action: 'updateMember', member_id: editingId, status: $('m_status').value }, vals));
+  else d = await api(Object.assign({ action: 'addMember' }, vals));
+  $('mSave').disabled = false;
+  if (!d.ok) { mSay(d.error || 'Could not save', false); return; }
+  mSay(editingId ? 'Member updated.' : 'Member added.', true);
+  if (!editingId) showPin(vals.name + ' (' + d.member_id + ')', d.temp_pin);
+  closeForm(); loadMembers();
+};
+
+$('mReset').onclick = async () => {
+  const m = members.find(x => x.member_id === editingId); if (!m) return;
+  if (!confirm('Reset PIN for ' + m.name + '? They will be signed out and must use the new PIN.')) return;
+  const d = await api({ action: 'resetPin', member_id: m.member_id });
+  if (!d.ok) { mSay(d.error || 'Could not reset', false); return; }
+  mSay('PIN reset.', true);
+  showPin(m.name + ' (' + m.member_id + ')', d.temp_pin);
+  closeForm();
+};
+
+// ===== SCHEMES =====
+let schemes = [], cur = null, editingScheme = null, memberPool = [];
+const TYPE_LABEL = { savings_distribution: 'Savings + Distribution', loan_fund: 'Loan Fund', savings_loan: 'Savings + Loan', custom: 'Custom' };
+const TYPE_HINT = {
+  savings_distribution: 'Members contribute regularly and the pool is paid out to members in turn.',
+  loan_fund: 'A pool that members can borrow from and repay, optionally with interest.',
+  savings_loan: 'Members contribute regularly and can also borrow from the pool.',
+  custom: 'Set whichever rules you need. Unused fields can stay at 0.'
+};
+function sSay(t, ok) { const m = $('sMsg'); m.textContent = t; m.className = 'msg ' + (ok ? 'ok' : 'err'); }
+function mk(tag, text, cls) { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; }
+function rupees(n) { return '₹' + Number(n || 0).toLocaleString('en-IN'); }
+
+function syncType() {
+  const t = $('s_type').value;
+  $('s_typeHint').textContent = TYPE_HINT[t];
+  $('g_contrib').classList.toggle('hidden', t === 'loan_fund');
+  $('g_loan').classList.toggle('hidden', t === 'savings_distribution');
+}
+$('s_type').onchange = syncType;
+
+async function loadSchemes() {
+  const d = await api({ action: 'listSchemes' });
+  if (!d.ok) { sSay(d.error || 'Could not load schemes', false); return; }
+  schemes = d.schemes;
+  const tb = $('sBody'); tb.textContent = '';
+  if (!schemes.length) { const tr = mk('tr'); const td = mk('td', 'No schemes yet. Click “Create scheme” to start.'); td.colSpan = 7; tr.appendChild(td); tb.appendChild(tr); }
+  schemes.forEach(x => {
+    const tr = mk('tr');
+    [x.scheme_id, x.name, TYPE_LABEL[x.type] || x.type, x.contribution_amount ? rupees(x.contribution_amount) + ' / ' + x.frequency.replace('_', ' ') : '—', x.member_count].forEach(v => tr.appendChild(mk('td', v)));
+    const st = mk('td'); st.appendChild(mk('span', x.status, 'badge')); tr.appendChild(st);
+    const a = mk('td'); const b = mk('button', 'Manage', 'ghost'); b.onclick = () => openScheme(x.scheme_id); a.appendChild(b); tr.appendChild(a);
+    tb.appendChild(tr);
+  });
+}
+
+function openSchemeForm(x) {
+  editingScheme = x ? x.scheme_id : null;
+  $('sForm').classList.remove('hidden');
+  $('sFormTitle').textContent = x ? 'Edit ' + x.name : 'Create scheme';
+  $('s_type').value = x ? x.type : 'savings_distribution';
+  $('s_name').value = x ? x.name : ''; $('s_desc').value = x ? x.description : '';
+  $('s_start').value = x ? x.start_date : ''; $('s_end').value = x ? x.end_date : '';
+  $('s_amount').value = x ? x.contribution_amount : ''; $('s_freq').value = x ? x.frequency : 'monthly';
+  $('s_interest').value = x ? x.interest_percent : 0; $('s_maxloan').value = x ? x.max_loan : 0;
+  const lock = !!(x && x.locked);
+  $('s_lockHint').classList.toggle('hidden', !lock);
+  syncType(); $('s_name').focus();
+}
+$('addSchemeBtn').onclick = () => openSchemeForm(null);
+$('sCancel').onclick = () => { $('sForm').classList.add('hidden'); editingScheme = null; };
+
+$('sSave').onclick = async () => {
+  const vals = { name: $('s_name').value, description: $('s_desc').value, type: $('s_type').value,
+    start_date: $('s_start').value, end_date: $('s_end').value, contribution_amount: $('s_amount').value,
+    frequency: $('s_freq').value, interest_percent: $('s_interest').value, max_loan: $('s_maxloan').value };
+  if (vals.type === 'loan_fund') { vals.contribution_amount = 0; }
+  if (vals.type === 'savings_distribution') { vals.interest_percent = 0; vals.max_loan = 0; }
+  $('sSave').disabled = true;
+  const d = await api(Object.assign({ action: editingScheme ? 'updateScheme' : 'createScheme', scheme_id: editingScheme }, vals));
+  $('sSave').disabled = false;
+  if (!d.ok) { sSay(d.error || 'Could not save', false); return; }
+  sSay(editingScheme ? 'Scheme updated.' : 'Scheme created. Open Manage to add members.', true);
+  const id = editingScheme || d.scheme_id;
+  $('sForm').classList.add('hidden'); editingScheme = null;
+  await loadSchemes();
+  if (cur && cur.scheme_id === id) openScheme(id);
+};
+
+async function openScheme(id) {
+  const [d, m] = await Promise.all([api({ action: 'getScheme', scheme_id: id }), api({ action: 'listMembers' })]);
+  if (!d.ok) { sSay(d.error || 'Could not open scheme', false); return; }
+  cur = d.scheme; cur.members = d.members; memberPool = m.ok ? m.members : [];
+  renderDetail();
+}
+
+function renderDetail() {
+  const x = cur;
+  $('sDetail').classList.remove('hidden');
+  $('sdTitle').textContent = x.name + ' (' + x.scheme_id + ')';
+  const kv = $('sdMeta'); kv.textContent = '';
+  [['Type', TYPE_LABEL[x.type]], ['Status', x.status], ['Starts', x.start_date], ['Ends', x.end_date || 'Not set'],
+   ['Contribution', x.contribution_amount ? rupees(x.contribution_amount) + ' ' + x.frequency.replace('_', ' ') : 'None'],
+   ['Loan interest', x.interest_percent + '% per month'], ['Max loan', x.max_loan ? rupees(x.max_loan) : 'No limit'],
+   ['Rules', x.locked ? 'Locked (scheme has started)' : 'Editable']].forEach(r => { kv.appendChild(mk('dt', r[0])); kv.appendChild(mk('dd', r[1])); });
+  const done = x.status === 'completed';
+  $('sdEdit').classList.toggle('hidden', done);
+  $('sdPause').classList.toggle('hidden', x.status !== 'active');
+  $('sdResume').classList.toggle('hidden', x.status !== 'paused');
+  $('sdComplete').classList.toggle('hidden', done);
+  $('sdSettleBtn').classList.toggle('hidden', done);
+  $('sdSettle').classList.add('hidden');
+  $('sdAddBtn').disabled = $('sdAddSel').disabled = done;
+
+  const inScheme = new Set(x.members.filter(m => m.status === 'active').map(m => m.member_id));
+  const sel = $('sdAddSel'); sel.textContent = '';
+  sel.appendChild(new Option('Choose a member to add', ''));
+  memberPool.filter(m => m.status === 'active' && !inScheme.has(m.member_id)).forEach(m => sel.appendChild(new Option(m.name + ' (' + m.member_id + ')', m.member_id)));
+
+  const tb = $('sdMembers'); tb.textContent = '';
+  if (!x.members.length) { const tr = mk('tr'); const td = mk('td', 'No members yet. Add one above.'); td.colSpan = 4; tr.appendChild(td); tb.appendChild(tr); }
+  x.members.forEach(m => {
+    const tr = mk('tr');
+    tr.appendChild(mk('td', m.member_id)); tr.appendChild(mk('td', m.name));
+    const st = mk('td'); st.appendChild(mk('span', m.status, 'badge')); tr.appendChild(st);
+    const a = mk('td');
+    if (m.status === 'active' && !done) {
+      const ex = mk('button', 'Exit', 'danger'); ex.onclick = () => memberExit(m);
+      const ts = mk('select'); ts.style.cssText = 'width:auto;margin:0 .3rem';
+      ts.appendChild(new Option('Move to…', ''));
+      schemes.filter(o => o.scheme_id !== x.scheme_id && o.status !== 'completed').forEach(o => ts.appendChild(new Option(o.name, o.scheme_id)));
+      ts.onchange = () => ts.value && memberMove(m, ts.value, ts.options[ts.selectedIndex].text);
+      a.appendChild(ex); a.appendChild(ts);
+    }
+    tr.appendChild(a); tb.appendChild(tr);
+  });
+}
+
+async function schemeCall(payload, okText) {
+  const d = await api(payload);
+  if (!d.ok) { sSay(d.error || 'Action failed', false); return false; }
+  sSay(okText, true); await loadSchemes(); await openScheme(cur.scheme_id); return true;
+}
+$('sdClose').onclick = () => { $('sDetail').classList.add('hidden'); cur = null; };
+$('sdEdit').onclick = () => { openSchemeForm(cur); $('sForm').scrollIntoView({ behavior: 'smooth' }); };
+$('sdPause').onclick = () => confirm('Pause this scheme? Contributions are stopped until you resume it.') && schemeCall({ action: 'setSchemeStatus', scheme_id: cur.scheme_id, status: 'paused' }, 'Scheme paused.');
+$('sdResume').onclick = () => schemeCall({ action: 'setSchemeStatus', scheme_id: cur.scheme_id, status: 'active' }, 'Scheme resumed.');
+$('sdComplete').onclick = () => confirm('Mark this scheme as completed? This cannot be undone. Settle all balances first.') && schemeCall({ action: 'setSchemeStatus', scheme_id: cur.scheme_id, status: 'completed' }, 'Scheme marked completed.');
+$('sdAddBtn').onclick = () => { const v = $('sdAddSel').value; if (v) schemeCall({ action: 'addSchemeMember', scheme_id: cur.scheme_id, member_id: v }, 'Member added.'); };
+function memberExit(m) { if (confirm('Remove ' + m.name + ' from this scheme? Settle their money separately.')) schemeCall({ action: 'exitSchemeMember', scheme_id: cur.scheme_id, member_id: m.member_id }, m.name + ' exited the scheme.'); }
+function memberMove(m, to, toName) { if (confirm('Move ' + m.name + ' to ' + toName + '?')) schemeCall({ action: 'transferMember', scheme_id: cur.scheme_id, to_scheme_id: to, member_id: m.member_id }, m.name + ' moved to ' + toName + '.'); else renderDetail(); }
+
+// ===== CONTRIBUTIONS =====
+function cSay(t, ok) { const m = $('cMsg'); m.textContent = t; m.className = 'msg ' + (ok ? 'ok' : 'err'); }
+function tSay(t, ok) { const m = $('tMsg'); m.textContent = t; m.className = 'msg ' + (ok ? 'ok' : 'err'); }
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function fillSchemeSelect(sel, withAll) {
+  sel.textContent = '';
+  if (withAll) sel.appendChild(new Option('All schemes', ''));
+  schemes.forEach(x => sel.appendChild(new Option(x.name + ' (' + x.status + ')', x.scheme_id)));
+}
+async function refreshSchemes() { const d = await api({ action: 'listSchemes' }); if (d.ok) schemes = d.schemes; }
+
+function syncPeriod() {
+  const x = schemes.find(o => o.scheme_id === $('c_scheme').value);
+  const inp = $('c_period'), f = x ? x.frequency : 'monthly';
+  $('c_periodWrap').classList.toggle('hidden', f === 'one_time');
+  if (f === 'one_time') { inp.type = 'text'; inp.value = 'ONE-TIME'; }
+  else if (f === 'weekly') { inp.type = 'date'; inp.value = todayStr(); $('c_periodLbl').textContent = 'Week starting'; }
+  else { inp.type = 'month'; inp.value = todayStr().slice(0, 7); $('c_periodLbl').textContent = 'Month'; }
+}
+$('c_scheme').onchange = syncPeriod;
+
+async function openContrib() {
+  await refreshSchemes(); fillSchemeSelect($('c_scheme'), false);
+  $('c_date').value = todayStr(); $('c_date').max = todayStr();
+  syncPeriod(); $('cBody').textContent = ''; $('c_bal').textContent = '';
+}
+
+async function loadContribs() {
+  const d = await api({ action: 'listContributions', scheme_id: $('c_scheme').value, period: $('c_period').value });
+  if (!d.ok) { cSay(d.error || 'Could not load', false); return; }
+  cSay('', true);
+  $('c_bal').textContent = 'Scheme balance (calculated from transactions): ' + rupees(d.balance) + ' · Scheme status: ' + d.scheme_status;
+  const tb = $('cBody'); tb.textContent = '';
+  if (!d.rows.length) { const tr = mk('tr'); const td = mk('td', 'No records for this period yet. Click “Create records for this period”.'); td.colSpan = 6; tr.appendChild(td); tb.appendChild(tr); }
+  d.rows.forEach(r => {
+    const tr = mk('tr');
+    [r.name + ' (' + r.member_id + ')', rupees(r.required), rupees(r.paid), rupees(r.pending)].forEach(v => tr.appendChild(mk('td', v)));
+    const st = mk('td'); st.appendChild(mk('span', r.status, 'badge')); tr.appendChild(st);
+    const a = mk('td');
+    if (r.pending > 0 && d.scheme_status === 'active') {
+      const full = mk('button', 'Mark as paid'); full.onclick = () => pay(r, r.pending);
+      const part = mk('button', 'Part', 'ghost'); part.style.marginLeft = '.3rem';
+      part.onclick = () => { const v = prompt('Amount received (₹) from ' + r.name + '. Pending: ' + r.pending); if (v) pay(r, Number(v)); };
+      a.appendChild(full); a.appendChild(part);
+    }
+    tr.appendChild(a); tb.appendChild(tr);
+  });
+}
+async function pay(r, amount) {
+  if (!(amount > 0)) { cSay('Enter a valid amount', false); return; }
+  const date = $('c_date').value || todayStr();
+  if (!confirm('Record ' + rupees(amount) + ' received from ' + r.name + ' on ' + date + '?')) return;
+  const d = await api({ action: 'recordPayment', contrib_id: r.contrib_id, amount: amount, txn_date: date });
+  if (!d.ok) { cSay(d.error || 'Could not record', false); return; }
+  cSay('Recorded as ' + d.txn_id + '.', true); loadContribs();
+}
+$('c_load').onclick = loadContribs;
+$('c_gen').onclick = async () => {
+  const d = await api({ action: 'genContributions', scheme_id: $('c_scheme').value, period: $('c_period').value });
+  if (!d.ok) { cSay(d.error || 'Could not create records', false); return; }
+  cSay(d.created + ' record(s) created.', true); loadContribs();
+};
+
+// ===== TRANSACTIONS =====
+async function openTxn() {
+  await refreshSchemes(); fillSchemeSelect($('t_scheme'), true); loadTxns();
+}
+async function loadTxns() {
+  const d = await api({ action: 'listTransactions', scheme_id: $('t_scheme').value, type: $('t_type').value });
+  if (!d.ok) { tSay(d.error || 'Could not load', false); return; }
+  tSay('', true);
+  const kv = $('balBox'); kv.textContent = '';
+  kv.appendChild(mk('dt', 'Total balance')); kv.appendChild(mk('dd', rupees(d.balances.total)));
+  d.balances.by_scheme.forEach(b => { kv.appendChild(mk('dt', b.name)); kv.appendChild(mk('dd', rupees(b.balance))); });
+  const tb = $('tBody'); tb.textContent = '';
+  if (!d.rows.length) { const tr = mk('tr'); const td = mk('td', 'No transactions yet.'); td.colSpan = 8; tr.appendChild(td); tb.appendChild(tr); }
+  d.rows.forEach(r => {
+    const tr = mk('tr');
+    const isC = r.type === 'CORRECTION';
+    const amt = isC ? (r.amount < 0 ? '−' : '+') + rupees(Math.abs(r.amount)) + ' (fixes ' + r.ref_txn_id + ')'
+      : rupees(r.effective) + (r.effective !== r.amount ? ' (was ' + rupees(r.amount) + ')' : '');
+    [r.txn_id, r.txn_date || r.timestamp.slice(0, 10), r.scheme_name, r.member_name, r.type, amt, r.note].forEach(v => tr.appendChild(mk('td', v)));
+    const a = mk('td');
+    if (!isC && r.effective > 0 && r.can_correct) {
+      const c = mk('button', 'Correct', 'ghost'); c.onclick = () => correctTxn(r, false);
+      const v = mk('button', 'Reverse', 'danger'); v.style.marginLeft = '.3rem'; v.onclick = () => correctTxn(r, true);
+      a.appendChild(c); a.appendChild(v);
+    }
+    tr.appendChild(a); tb.appendChild(tr);
+  });
+}
+async function correctTxn(r, reverse) {
+  let amt = 0;
+  if (!reverse) {
+    const v = prompt('Correct amount for ' + r.txn_id + ' (currently ' + r.effective + '):');
+    if (v === null || v === '') return; amt = Number(v);
+    if (!(amt >= 0)) { tSay('Enter a valid amount', false); return; }
+  }
+  const reason = prompt('Reason for ' + (reverse ? 'reversing' : 'correcting') + ' ' + r.txn_id + ' (required):');
+  if (!reason) return;
+  if (!confirm((reverse ? 'Reverse ' + rupees(r.effective) : 'Change ' + rupees(r.effective) + ' to ' + rupees(amt)) + ' for ' + r.txn_id + '? The original stays in the history.')) return;
+  const d = await api({ action: 'correctTransaction', txn_id: r.txn_id, new_amount: amt, reason: reason });
+  if (!d.ok) { tSay(d.error || 'Could not correct', false); return; }
+  tSay('Correction recorded as ' + d.txn_id + '.', true); loadTxns();
+}
+$('t_load').onclick = loadTxns;
+
+// ===== REQUESTS =====
+let reqPos = {};
+function rSay(t, ok) { const m = $('rMsg'); m.textContent = t; m.className = 'msg ' + (ok ? 'ok' : 'err'); }
+
+async function loadRequests() {
+  const d = await api({ action: 'listRequests', status: $('r_status').value });
+  if (!d.ok) { rSay(d.error || 'Could not load requests', false); return; }
+  rSay('', true);
+  reqPos = {};
+  const pb = $('posBody'); pb.textContent = '';
+  d.positions.forEach(x => {
+    reqPos[x.scheme_id] = x;
+    const tr = mk('tr');
+    [x.name, rupees(x.actual), rupees(x.pending)].forEach(v => tr.appendChild(mk('td', v)));
+    const av = mk('td', rupees(x.available)); if (x.available < 0) av.style.color = 'var(--warn)';
+    tr.appendChild(av); pb.appendChild(tr);
+  });
+  const tb = $('rBody'); tb.textContent = '';
+  if (!d.rows.length) { const tr = mk('tr'); const td = mk('td', 'No requests to show.'); td.colSpan = 8; tr.appendChild(td); tb.appendChild(tr); }
+  d.rows.forEach(r => {
+    const tr = mk('tr');
+    const amt = r.approved_amount && r.approved_amount !== r.amount ? rupees(r.approved_amount) + ' (asked ' + rupees(r.amount) + ')' : rupees(r.amount);
+    [r.request_id, r.member_name, r.scheme_name, amt, r.reason, r.repay_required].forEach(v => tr.appendChild(mk('td', v)));
+    const st = mk('td'); st.appendChild(mk('span', r.status, 'badge'));
+    if (r.admin_note) st.appendChild(mk('div', r.admin_note, 'hint'));
+    tr.appendChild(st);
+    const a = mk('td');
+    if (r.status === 'pending' && d.can_decide) {
+      const ap = mk('button', 'Approve'); ap.onclick = () => decide(r, 'approve', '');
+      const mo = mk('button', 'Modify', 'ghost'); mo.style.margin = '0 .3rem'; mo.onclick = () => {
+        const v = prompt('Approve a different amount (₹, up to ' + r.amount + '):', r.amount);
+        if (v) decide(r, 'approve', Number(v));
+      };
+      const rj = mk('button', 'Reject', 'danger'); rj.onclick = () => decide(r, 'reject', '');
+      a.appendChild(ap); a.appendChild(mo); a.appendChild(rj);
+    }
+    tr.appendChild(a); tb.appendChild(tr);
+  });
+}
+
+async function decide(r, decision, amount) {
+  let note = '';
+  if (decision === 'reject') {
+    note = prompt('Reason for rejecting (required):'); if (!note) return;
+    if (!confirm('Reject the ' + rupees(r.amount) + ' request from ' + r.member_name + '?')) return;
+  } else {
+    const pos = reqPos[r.scheme_id] || { actual: 0, available: 0 };
+    const amt = amount || r.amount;
+    let m = 'Approve ' + rupees(amt) + ' for ' + r.member_name + ' from ' + r.scheme_name + '?\n' +
+      'This records a ' + (r.repay_required === 'yes' ? 'LOAN' : 'DISTRIBUTION') + ' and lowers the balance to ' + rupees(pos.actual - amt) + '.';
+    if (pos.available < 0) m += '\n\nNote: all pending requests together are more than the balance.';
+    if (!confirm(m)) return;
+  }
+  const d = await api({ action: 'decideRequest', request_id: r.request_id, decision: decision, amount: amount, note: note });
+  if (!d.ok) { rSay(d.error || 'Could not save decision', false); return; }
+  rSay(decision === 'reject' ? 'Request rejected.' : 'Approved and recorded as ' + d.txn_id + '.', true);
+  loadRequests();
+}
+$('r_load').onclick = loadRequests;
+
+// ===== FINAL SETTLEMENT =====
+$('sdSettleBtn').onclick = async () => {
+  const box = $('sdSettle'); box.textContent = ''; box.classList.remove('hidden');
+  const d = await api({ action: 'settlementPreview', scheme_id: cur.scheme_id });
+  if (!d.ok) { box.appendChild(mk('p', d.error || 'Could not prepare settlement', 'msg err')); return; }
+  box.appendChild(mk('h3', 'Final settlement preview'));
+  box.appendChild(mk('p', 'Balance to share: ' + rupees(d.balance) + '. It is split in proportion to each active member’s contributions.', 'hint'));
+  const wrap = mk('div', undefined, 'tbl'), t = mk('table'), hd = mk('tr');
+  ['Member', 'Contributed', 'Already received', 'Settlement payout'].forEach(h => hd.appendChild(mk('th', h)));
+  t.appendChild(mk('thead')).appendChild(hd);
+  const tb = mk('tbody');
+  d.rows.forEach(r => { const tr = mk('tr'); [r.name, rupees(r.contributed), rupees(r.received), rupees(r.payout)].forEach(v => tr.appendChild(mk('td', v))); tb.appendChild(tr); });
+  t.appendChild(tb); wrap.appendChild(t); box.appendChild(wrap);
+  d.blockers.forEach(b => box.appendChild(mk('p', 'Cannot settle yet: ' + b, 'msg err')));
+  if (d.blockers.length) return;
+  if (d.balance <= 0) { box.appendChild(mk('p', 'There is nothing to pay out. Use “Mark completed” to close the scheme.', 'hint')); return; }
+  const go = mk('button', 'Confirm settlement and complete scheme', 'danger'); go.style.marginTop = '.8rem';
+  go.onclick = async () => {
+    if (!confirm('Record ' + rupees(d.balance) + ' in payouts and complete this scheme? This cannot be undone.')) return;
+    go.disabled = true;
+    const r = await api({ action: 'settleScheme', scheme_id: cur.scheme_id, expected_balance: d.balance });
+    go.disabled = false;
+    if (!r.ok) { sSay(r.error || 'Settlement failed', false); return; }
+    sSay('Scheme settled. ' + rupees(r.paid) + ' paid out and the scheme is completed.', true);
+    await loadSchemes(); openScheme(cur.scheme_id);
+  };
+  box.appendChild(go);
+};
+
+// ===== LOANS & PAYOUTS =====
+let moLoans = [];
+function moSay(t, ok) { const m = $('moMsg'); m.textContent = t; m.className = 'msg ' + (ok ? 'ok' : 'err'); }
+
+async function openMoney() {
+  await refreshSchemes();
+  const sel = $('mo_scheme'); sel.textContent = '';
+  schemes.filter(x => x.status !== 'completed').forEach(x => sel.appendChild(new Option(x.name + ' (' + x.status + ')', x.scheme_id)));
+  $('mo_date').value = todayStr(); $('mo_date').max = todayStr();
+  await loadLoans(); await fillMoMembers();
+}
+async function loadLoans() {
+  const d = await api({ action: 'listLoans' });
+  if (!d.ok) { moSay(d.error || 'Could not load loans', false); return; }
+  moLoans = d.rows;
+  const tb = $('loanBody'); tb.textContent = '';
+  if (!moLoans.length) { const tr = mk('tr'); const td = mk('td', 'No loans yet.'); td.colSpan = 7; tr.appendChild(td); tb.appendChild(tr); }
+  moLoans.forEach(l => {
+    const tr = mk('tr');
+    [l.member_name + ' (' + l.member_id + ')', l.scheme_name, rupees(l.taken), rupees(l.repaid), rupees(l.outstanding), rupees(l.interest)].forEach(v => tr.appendChild(mk('td', v)));
+    const a = mk('td');
+    if (l.outstanding > 0 && d.can_record) {
+      const b = mk('button', 'Record repayment', 'ghost');
+      b.onclick = async () => {
+        $('mo_type').value = 'REPAYMENT'; $('mo_scheme').value = l.scheme_id;
+        await fillMoMembers(); $('mo_member').value = l.member_id; moHint(); $('mo_amount').focus();
+      };
+      a.appendChild(b);
+    }
+    tr.appendChild(a); tb.appendChild(tr);
+  });
+}
+async function fillMoMembers() {
+  const sid = $('mo_scheme').value, sel = $('mo_member'); sel.textContent = '';
+  if (!sid) return;
+  const d = await api({ action: 'getScheme', scheme_id: sid });
+  const seen = {};
+  if (d.ok) d.members.filter(m => m.status === 'active').forEach(m => { seen[m.member_id] = 1; sel.appendChild(new Option(m.name + ' (' + m.member_id + ')', m.member_id)); });
+  moLoans.filter(l => l.scheme_id === sid && !seen[l.member_id]).forEach(l => sel.appendChild(new Option(l.member_name + ' (' + l.member_id + ') – left scheme', l.member_id)));
+  moHint();
+}
+function moHint() {
+  const t = $('mo_type').value, sid = $('mo_scheme').value, mid = $('mo_member').value;
+  const sc = schemes.find(x => x.scheme_id === sid), ln = moLoans.find(l => l.scheme_id === sid && l.member_id === mid);
+  let h = '';
+  if (t === 'REPAYMENT') h = ln ? 'Outstanding loan: ' + rupees(ln.outstanding) : 'This member has no loan in this scheme.';
+  else if (t === 'INTEREST') h = sc ? 'Scheme interest: ' + sc.interest_percent + '% per month.' + (ln ? ' One month on the outstanding loan is about ' + rupees(Math.round(ln.outstanding * sc.interest_percent) / 100) + '.' : '') : '';
+  else if (t === 'LOAN') h = sc && sc.max_loan ? 'Maximum loan in this scheme: ' + rupees(sc.max_loan) : '';
+  $('mo_hint').textContent = h;
+}
+$('mo_scheme').onchange = fillMoMembers; $('mo_member').onchange = moHint; $('mo_type').onchange = moHint;
+
+$('mo_save').onclick = async () => {
+  const sel = (id) => $(id).options[$(id).selectedIndex];
+  if (!$('mo_member').value) { moSay('Choose a member', false); return; }
+  const amount = $('mo_amount').value;
+  if (!confirm('Record ' + sel('mo_type').text + ' of ' + rupees(Number(amount)) + ' for ' + sel('mo_member').text + ' in ' + sel('mo_scheme').text + ' dated ' + $('mo_date').value + '?')) return;
+  $('mo_save').disabled = true;
+  const d = await api({ action: 'recordMoney', type: $('mo_type').value, scheme_id: $('mo_scheme').value, member_id: $('mo_member').value,
+    amount: amount, txn_date: $('mo_date').value, note: $('mo_note').value });
+  $('mo_save').disabled = false;
+  if (!d.ok) { moSay(d.error || 'Could not record', false); return; }
+  moSay('Recorded as ' + d.txn_id + '.', true);
+  $('mo_amount').value = ''; $('mo_note').value = '';
+  await loadLoans(); moHint();
+};
+
+// Resume an existing session in this tab
+(async () => {
+  if (!token) return;
+  const d = await api({ action: 'me' });
+  if (d.ok) {
+    let n = ['Admin', d.user.member_id];
+    try { n = (sessionStorage.getItem('gf_admin_name') || '').split('|'); } catch (e) {}
+    showApp(n[0] || 'Admin', n[1] || d.user.member_id);
+  } else signOut('');
+})();
+</script>
+</body>
+</html>
